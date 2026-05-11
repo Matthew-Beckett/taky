@@ -1,10 +1,11 @@
 import os
 import json
 import hashlib
-import magic
+
 from datetime import datetime as dt
 
 from flask import request, send_file
+from pytz import UTC
 from werkzeug.utils import secure_filename
 
 from taky.dps import app, requires_auth
@@ -39,18 +40,18 @@ def put_meta(meta):
     """
     Updates the metadata - the supplied hash/UID is used to find the target file
     """
-    filename = meta.get("UID")
+    f_uid = meta.get("UID")
     f_hash = meta.get("Hash")
 
-    # Save the file's meta/{filename}.json
-    meta_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{filename}.json")
+    # Save the file's meta/{f_uid}.json
+    meta_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{f_uid}.json")
     with open(meta_path, "w", encoding="utf8") as meta_fp:
         json.dump(meta, meta_fp)
 
-    # Symlink the meta/{f_hash}.json to {filename}.json
+    # Symlink the meta/{f_hash}.json to {f_uid}.json
     meta_hash_path = os.path.join(app.config["UPLOAD_PATH"], "meta", f"{f_hash}.json")
     try:
-        os.symlink(f"{filename}.json", meta_hash_path)
+        os.symlink(f"{f_uid}.json", meta_hash_path)
     except FileExistsError:
         pass
 
@@ -67,6 +68,7 @@ def datapackage_search():
     """
     ret = []
     for item in os.listdir(app.config["UPLOAD_PATH"]):
+        
         path = os.path.join(app.config["UPLOAD_PATH"], item)
         if not os.path.isfile(path):
             continue
@@ -75,7 +77,7 @@ def datapackage_search():
         meta = get_meta(f_name=item)
         if meta and meta.get("Visibility", "public") == "public":
             ret.append(meta)
-
+    
     return {"resultCount": len(ret), "results": ret}
 
 
@@ -94,7 +96,7 @@ def datapackage_get():
         return "Must supply hash", 400
 
     meta = get_meta(f_hash=f_hash)
-    name = os.path.join(app.config["UPLOAD_PATH"], meta["UID"])
+    name = os.path.join(app.config["UPLOAD_PATH"], meta["Name"])
 
     if not os.path.exists(name):
         return f"Can't find {name}", 404
@@ -105,7 +107,18 @@ def datapackage_get():
 @app.route("/Marti/sync/upload", methods=["POST"])
 @requires_auth
 def datapackage_upload_itak():
-    mime = magic.Magic(mime=True)
+    """
+    Upload a datapackage to the server from iTAK clients
+
+    Arguments:
+        name=...
+        uid=...
+        CreatorUid=...
+        keywords=...
+
+    Return:
+        The URL where the file can be downloaded
+    """
     try:
         name = request.args["name"]
         uid = request.args["uid"]
@@ -115,7 +128,7 @@ def datapackage_upload_itak():
     except KeyError:
         return "Invalid arguments", 400
 
-    filename = secure_filename(f"{creator_uid}_{name}")
+    filename = secure_filename(f"{creator_uid}_{name}.zip")
 
     meta = get_meta(f_name=filename)
     if meta.get("Hash") != f_hash:
@@ -138,11 +151,11 @@ def datapackage_upload_itak():
         "Name": name,  # File name on the server
         "Hash": f_hash.hexdigest(),  # SHA-256, checked
         "PrimaryKey": 1,  # Not used, must be >= 0
-        "SubmissionDateTime": dt.utcnow().isoformat() + "Z",
+        "SubmissionDateTime": dt.now(UTC).isoformat() + "Z",
         "SubmissionUser": sub_user,
         "CreatorUid": creator_uid,
         "Keywords": f"{keywords}",
-        "MIMEType": f"{mime.from_buffer(request.data)}",
+        "MIMEType": "application/x-zip-compressed", # iTAK sends a zip file
         "Size": os.path.getsize(file_path),  # Checked, do not fake
         "Visibility": "public",
     }
@@ -167,7 +180,6 @@ def datapackage_upload():
     Return:
         The URL where the file can be downloaded
     """
-
     try:
         asset_fp = request.files["assetfile"]
         creator_uid = request.args["creatorUid"]
