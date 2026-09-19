@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+    paths:
+      - 'taky/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'taky/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+    - name: Install uv
+      uses: astral-sh/setup-uv@v10.1.0
+      with:
+        enable-cache: true
+    - name: Set up Python
+      run: uv python install
+    - name: Install dependencies
+      run: uv sync --locked
+    - name: Analyzing the code with pylint
+      run: |
+        uv run python -c "from pylint.lint import Run; ret = Run(['taky'], do_exit=False); print('%.2f' % ret.linter.stats.global_note)"
+    - name: Running unit tests, generating coverage
+      run: |
+        uv run coverage run -m unittest discover
+        uv run coverage report
