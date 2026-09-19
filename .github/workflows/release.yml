@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - 'main'
+  workflow_dispatch:
+
+# Serialize merges: each run bumps on top of the previous tag.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+  PLATFORMS: linux/amd64,linux/arm64
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.bump.outputs.new_tag }}
+      new_version: ${{ steps.bump.outputs.new_version }}
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+    # Bumps the semver tag on every merge. Patch by default; put #minor,
+    # #major or #none in the merge commit message to override.
+    - name: Bump version and push tag
+      id: bump
+      uses: anothrNick/github-tag-action@1.75.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: false
+        DEFAULT_BUMP: patch
+        INITIAL_VERSION: 0.9.1
+        RELEASE_BRANCHES: main
+
+  # GITHUB_TOKEN tag pushes don't trigger workflows, so the image build
+  # must live in this workflow rather than a separate tag-push pipeline.
+  image:
+    runs-on: ubuntu-latest
+    needs: tag
+    if: needs.tag.outputs.new_tag != ''
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: all
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Docker metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.IMAGE }}
+        flavor: latest=true
+        tags: |
+          type=semver,pattern={{version}},value=${{ needs.tag.outputs.new_tag }}
+          type=semver,pattern={{major}}.{{minor}},value=${{ needs.tag.outputs.new_tag }}
+          type=sha,format=short
+
+    - name: Build and push
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        platforms: ${{ env.PLATFORMS }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          SETUPTOOLS_SCM_PRETEND_VERSION=${{ needs.tag.outputs.new_version }}
