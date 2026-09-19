@@ -16,6 +16,7 @@ on:
       - 'pyproject.toml'
       - 'uv.lock'
   workflow_dispatch:
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
