@@ -80,7 +80,7 @@ class COTRouter:
         """
         Broadcast a message from source to all clients
         """
-        if src.user:
+        if getattr(src, "user", None):
             self.lgr.debug("%s -> Broadcast: %s", src.user.callsign, msg)
         else:
             self.lgr.debug("Anonymous Broadcast: %s", msg)

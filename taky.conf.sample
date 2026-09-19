@@ -19,6 +19,13 @@
 # For quick testing, set to /tmp/taky
 #upload_path=/var/taky/dp-user
 
+# If set, enables the Marti TLS enrollment endpoints
+# (/Marti/api/tls/signClient, /Marti/api/tls/signClient/v2, and
+# /Marti/api/tls/makeClientKeyStore), which sign client certificates with
+# the CA. Clients must supply the token as "Authorization: Bearer <token>"
+# or a ?token= parameter. If unset, these endpoints are disabled.
+#enrollment_token=
+
 [ssl]
 # SSL is disabled by default. Set enabled to "true" to enable
 #enabled=false

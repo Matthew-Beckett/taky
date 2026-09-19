@@ -9,6 +9,27 @@ from taky.config import load_config, app_config
 application = app = Flask(__name__)
 
 
+MARTI_API_VERSION = "3"
+
+
+def api_response(data=None, rtype=None, messages=None):
+    """
+    Build a Marti ApiResponse envelope
+
+    {"version": "3", "type": <type>, "data": <data>, "nodeId": <node id>}
+    """
+    ret = {
+        "version": MARTI_API_VERSION,
+        "type": rtype,
+        "data": data,
+        "nodeId": app.config["NODEID"],
+    }
+    if messages is not None:
+        ret["messages"] = messages
+
+    return ret
+
+
 def requires_auth(func):
     """
     Function to ensure that a valid client certificate is submitted

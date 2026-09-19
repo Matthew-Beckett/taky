@@ -23,6 +23,10 @@ DEFAULT_CFG = {
     },
     "dp_server": {
         "upload_path": "/var/taky/dp-user",
+        # If set, enables the Marti TLS enrollment endpoints
+        # (signClient / makeClientKeyStore). Clients must present this
+        # token as a Bearer token or "token" parameter.
+        "enrollment_token": None,
     },
     "ssl": {
         "enabled": False,
