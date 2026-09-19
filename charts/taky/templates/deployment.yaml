@@ -36,7 +36,12 @@ spec:
         - name: init-data
           image: {{ include "taky.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["sh", "-c", "mkdir -p /var/taky/dp-user"]
+          # Runs as root: provisioned volumes mount root-owned, and the
+          # taky user (uid 100) needs /var/taky writable for the mgmt
+          # socket and datapackage uploads.
+          securityContext:
+            runAsUser: 0
+          command: ["sh", "-c", "mkdir -p /var/taky/dp-user && chown -R taky:taky /var/taky"]
           volumeMounts:
             - name: data
               mountPath: /var/taky
