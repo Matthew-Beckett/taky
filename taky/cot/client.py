@@ -31,6 +31,8 @@ class SocketClient:
     server, such as SSL handshake state, and an outgoing data buffer.
     """
 
+    MAX_OUT_BUFF = 1024 * 1024
+
     def __init__(self, sock, use_ssl=False, **kwargs):
         self.sock = sock
         self.ssl = use_ssl
@@ -147,6 +149,18 @@ class SocketClient:
             self.lgr.debug("Client blocked TX: %s", self)
         except (ssl.SSLError, socket.error, IOError, OSError) as exc:
             self.disconnect(str(exc))
+
+    def queue_tx(self, data):
+        """
+        Queue data in the transmit buffer. If the buffer would exceed
+        MAX_OUT_BUFF, the client is considered stalled and disconnected.
+        """
+        if len(self.out_buff) + len(data) > self.MAX_OUT_BUFF:
+            self.disconnect("TX buffer overflow")
+            return False
+
+        self.out_buff += data
+        return True
 
     def disconnect(self, reason=None):
         if not self.is_closed:
@@ -395,4 +409,4 @@ class SocketTAKClient(TAKClient, SocketClient):
         if not self.ready:
             return
 
-        self.out_buff += etree.tostring(event.as_element)
+        self.queue_tx(etree.tostring(event.as_element))

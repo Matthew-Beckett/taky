@@ -12,6 +12,8 @@ class MgmtClient(SocketClient):
     in the style of {"cmd": "..."}\\0
     """
 
+    MAX_RX_BUFF = 4096
+
     def __init__(self, server, **kwargs):
         self.lgr = logging.getLogger(self.__class__.__name__)
         self.server = server
@@ -26,6 +28,9 @@ class MgmtClient(SocketClient):
     def feed(self, data):
         self.buff += data
         self.handle_rx()
+
+        if len(self.buff) > self.MAX_RX_BUFF:
+            self.disconnect("RX buffer overflow")
 
     def handle_rx(self):
         try:
@@ -52,7 +57,7 @@ class MgmtClient(SocketClient):
             ret = {"error": str(exc)}
 
         ret = json.dumps(ret)
-        self.out_buff += ret.encode() + b"\0"
+        self.queue_tx(ret.encode() + b"\0")
 
     def kickban(self, user):
         cdb = self.server.cert_db
