@@ -2,7 +2,7 @@
 
 ARG PYTHON_VERSION=3.14
 
-FROM python:${PYTHON_VERSION}-slim AS builder
+FROM python:${PYTHON_VERSION}-alpine AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:0.12.10 /uv /uvx /bin/
 
@@ -27,11 +27,11 @@ COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --no-editable
 
-FROM python:${PYTHON_VERSION}-slim AS runtime
+FROM python:${PYTHON_VERSION}-alpine AS runtime
 
-RUN groupadd --system taky && \
+RUN addgroup -S taky && \
     mkdir -p /etc/taky /var/taky && \
-    useradd --system --gid taky --home-dir /var/taky taky && \
+    adduser -S -G taky -h /var/taky taky && \
     chown taky:taky /var/taky
 
 COPY --from=builder /app/.venv /app/.venv
