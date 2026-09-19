@@ -18,7 +18,7 @@ jobs:
       cov-pct: ${{ steps.tests.outputs.cov-pct }}
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
     - name: Install uv
