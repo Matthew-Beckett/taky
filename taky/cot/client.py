@@ -314,7 +314,11 @@ class TAKClient:
                 self.log_event(elm=elm, _exc=traceback.format_exc())
                 continue
             finally:
+                parent = elm.getparent()
                 elm.clear(keep_tail=True)
+                if parent is not None and parent.getparent() is None:
+                    while elm.getprevious() is not None:
+                        del parent[0]
 
     def handle_atom(self, evt):
         """

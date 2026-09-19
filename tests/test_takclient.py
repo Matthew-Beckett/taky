@@ -3,6 +3,7 @@ import unittest as ut
 from unittest import mock
 
 from taky import cot
+from taky.cot import models
 from taky.config import load_config, app_config
 
 from .test_cot_event import XML_S
@@ -25,6 +26,25 @@ class TAKClientTest(ut.TestCase):
         self.assertEqual(self.tk.user.group, cot.Teams.CYAN)
         self.assertEqual(self.tk.user.battery, "78")
         self.assertEqual(self.tk.user.role, "Team Member")
+
+    def test_feed_bounded_parser_tree(self):
+        """
+        Regression test: feed() must prune processed elements from the pull
+        parser's primed <root>, or the tree grows with every event received.
+        """
+        seen = []
+        orig = models.Event.from_elm
+
+        def spy(elm):
+            seen.append(elm)
+            return orig(elm)
+
+        with mock.patch.object(models.Event, "from_elm", staticmethod(spy)):
+            self.tk.feed(XML_S * 100)
+
+        self.assertEqual(len(seen), 100)
+        self.assertLessEqual(len(seen[-1].getparent()), 1)
+        self.assertIsNone(seen[0].getparent())
 
 
 class SocketTAKClientTest(ut.TestCase):
