@@ -2,7 +2,7 @@
 
 taky - A simple COT server for ATAK
 
-![python](https://img.shields.io/badge/python-3.6%7C3.7%7C3.8-black)
+![python](https://img.shields.io/badge/python-3.10%7C3.11%7C3.12%7C3.13%7C3.14-black)
 ![pylint](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tkuester/b8b273c056ed05901cfc671070e875ed/raw/taky-pylint-shieldsio.json)
 ![coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tkuester/c7e215b2645a1b63b07f12eff8f13fdb/raw/taky-coverage-shieldsio.json)
 ![PyPI](https://img.shields.io/pypi/v/taky)
@@ -40,17 +40,17 @@ Looking for an indepth feature comparison?
 
 ## Hardware and Software Requirements
 
- * Python 3.6 or greater
+ * Python 3.10 or greater
  * lxml (BSD)
- * dateutil (Apache 2.0 / BSD 3-clause)
+ * python-dateutil (Apache 2.0 / BSD 3-clause)
  * flask (BSD 3-clause)
  * cryptography (Apache 2.0 / BSD 3-clause / PSF)
  * gunicorn (MIT)
  * redis (MIT)
 
-This application was developed with Python 3.8 on Ubuntu 20.04, and tested with
+This application was developed with Python 3.14, and tested with
 ATAK v4.2.0.4 and WinTAK. It is now in a beta state, and has even been tested
-on a CentOS 8 docker image! As the package is available on pip, it should run
+on a CentOS 8 docker image! As the package is available on PyPI, it should run
 on most modern linux distros and docker containers!
 
 taky has minimal hardware requirements, and runs comfortably on small VPS's,
@@ -61,10 +61,11 @@ with up to 100 clients.
 
 ## Installation
 
-To install the latest release, install from pip. Open a shell and run:
+To install the latest release, install from PyPI with
+[uv](https://docs.astral.sh/uv/) (or plain pip). Open a shell and run:
 
 ```
-$ sudo python3 -m pip install taky
+$ uv tool install taky
 ```
 
 If you prefer the develoment release (not always stable), you can install it
@@ -73,7 +74,8 @@ from source.
 ```
 $ git clone https://github.com/tkuester/taky
 $ cd taky
-taky $ python3 setup.py install
+taky $ uv sync
+taky $ uv run taky
 ```
 
 ## Usage

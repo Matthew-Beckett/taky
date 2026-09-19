@@ -124,7 +124,7 @@ def main():
     """
     Runs the DPS, handy for avoiding a specific gunicorn setup
     """
-    (argp, args) = arg_parse()
+    argp, args = arg_parse()
     logging.basicConfig(level=args.log_level.upper(), stream=sys.stderr)
 
     try:

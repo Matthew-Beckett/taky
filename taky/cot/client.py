@@ -3,7 +3,7 @@ import os
 import time
 import enum
 from datetime import datetime as dt
-from datetime import timedelta
+from datetime import timedelta, timezone
 import socket
 import ssl
 import logging
@@ -39,7 +39,7 @@ class SocketClient:
         self.out_buff = b""
         self.connect_cb = kwargs.get("cbs", {}).get("connect", lambda client: None)
 
-        (ip, port) = self.addr
+        ip, port = self.addr
         lgr_name = f"{self.__class__.__name__}@{ip}:{port}"
         self.lgr = logging.getLogger(lgr_name)
 
@@ -76,7 +76,7 @@ class SocketClient:
         return len(self.out_buff) > 0 or self.ssl_hs == SSLState.SSL_WAIT_TX
 
     def __repr__(self):
-        (ip, port) = self.addr[0:2]
+        ip, port = self.addr[0:2]
         return f"<{self.__class__.__name__} addr={ip}:{port} ssl={self.ssl}>"
 
     def feed(self, data):
@@ -282,7 +282,7 @@ class TAKClient:
         # TODO: Specify maximum element size
         self.xdc.feed(data)
 
-        for (_, elm) in self.xdc.read_events():
+        for _, elm in self.xdc.read_events():
             self.num_rx += 1
             self.last_rx = time.time()
             try:
@@ -343,7 +343,7 @@ class TAKClient:
         Generate and send a TAK pong. Clients that do not receive a pong in
         an appropriate amount of time will disconnect.
         """
-        now = dt.utcnow()
+        now = dt.now(timezone.utc).replace(tzinfo=None)
         pong = models.Event(
             uid="takPong",
             etype="t-x-c-t-r",

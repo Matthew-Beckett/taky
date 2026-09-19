@@ -6,6 +6,7 @@ build
 dist
 *.pyc
 .tox
+.venv
 
 # Python Coverage
 .coverage

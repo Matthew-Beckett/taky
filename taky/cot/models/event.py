@@ -1,4 +1,5 @@
 from datetime import datetime as dt
+from datetime import timezone
 
 from lxml import etree
 from dateutil.parser import isoparse
@@ -41,7 +42,9 @@ class Event:
 
     @property
     def persist_ttl(self):
-        return round((self.stale - dt.utcnow()).total_seconds())
+        return round(
+            (self.stale - dt.now(timezone.utc).replace(tzinfo=None)).total_seconds()
+        )
 
     @staticmethod
     def from_elm(elm):

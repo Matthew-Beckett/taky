@@ -22,7 +22,7 @@ def build_srv(ip_addr, port):
             addr_info = socket.getaddrinfo(ip_addr, port, type=socket.SOCK_STREAM)
             if len(addr_info) > 1:
                 logging.warning("Multiple address entities for %s:%s", ip_addr, port)
-            (sock_fam, _, _, _, bind_args) = addr_info[0]
+            sock_fam, _, _, _, bind_args = addr_info[0]
         except socket.gaierror as exc:
             raise ValueError(
                 f"Unable to determine address info for bind_ip: {ip_addr}"
@@ -182,7 +182,7 @@ class COTServer:
             return
 
         try:
-            (sock, _) = self.mgmt.accept()
+            sock, _ = self.mgmt.accept()
         except (socket.error, OSError) as exc:
             self.lgr.info("Dropping management client: %s", exc)
             return
@@ -199,8 +199,8 @@ class COTServer:
         use_ssl = self.ssl_ctx and not (force_tcp or mon_client)
 
         try:
-            (sock, addr) = srv_sock.accept()
-            (ip_addr, port) = addr[0:2]
+            sock, addr = srv_sock.accept()
+            ip_addr, port = addr[0:2]
 
             if use_ssl and self.ssl_ctx:
                 sock = self.ssl_ctx.wrap_socket(
@@ -277,7 +277,7 @@ class COTServer:
             rd_clients.append(self.mgmt)
         wr_clients = list(filter(lambda x: self.clients[x].has_data, self.clients))
 
-        (s_rd, s_wr, s_ex) = select.select(rd_clients, wr_clients, rd_clients, 1)
+        s_rd, s_wr, s_ex = select.select(rd_clients, wr_clients, rd_clients, 1)
 
         # At each stage, we will need to re-check to make sure the previous
         # stage did not close our socket.
@@ -315,7 +315,7 @@ class COTServer:
         # Prune sockets that have not finished the SSL handshake
         now = time.time()
         prune_sox = list(self.clients.items())
-        for (sock, client) in prune_sox:
+        for sock, client in prune_sox:
             if client.is_closed:
                 self.client_disconnect(client, "Is closed")
                 continue

@@ -8,7 +8,7 @@ def build_pref(pref_fp, prefs):
     Build an XML preference file
     """
     prefs_xml = etree.Element("preferences")
-    for (name, pref) in prefs.items():
+    for name, pref in prefs.items():
         pref_xml = etree.Element(
             "preference",
             attrib={
@@ -17,7 +17,7 @@ def build_pref(pref_fp, prefs):
             },
         )
 
-        for (key, val) in pref.items():
+        for key, val in pref.items():
             if isinstance(val, bool):
                 v_type = "Boolean"
             elif isinstance(val, int):
@@ -56,7 +56,7 @@ def build_manifest(man_fp, cfg_params, contents):
 
     # Build Configuration element
     cfg_xml = etree.Element("Configuration")
-    for (name, value) in cfg_params.items():
+    for name, value in cfg_params.items():
         cfg_xml.append(
             etree.Element(
                 "Parameter",

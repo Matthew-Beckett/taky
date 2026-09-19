@@ -6,7 +6,7 @@ https://github.com/mitmproxy/mitmproxy
 """
 
 import os
-from datetime import datetime as dt, timedelta
+from datetime import datetime as dt, timedelta, timezone
 import ipaddress
 
 from cryptography import x509
@@ -74,7 +74,7 @@ def make_ca(crt_path, key_path, n_years=10):
     @param key_path  Where to write the ca key
     @param n_years   How many years the CA should be valid for
     """
-    now = dt.now()
+    now = dt.now(timezone.utc).replace(tzinfo=None)
 
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
@@ -148,11 +148,11 @@ def make_cert(
     @param n_years   How many years the certificate should be valid for
     @param dump_pem  True if you wish to keep the .crt/.key file
     """
-    now = dt.now()
+    now = dt.now(timezone.utc).replace(tzinfo=None)
 
     # Load CA
-    (ca_crt_path, ca_key_path) = cert_auth
-    (ca_crt, ca_key) = load_certificate(ca_crt_path, ca_key_path)
+    ca_crt_path, ca_key_path = cert_auth
+    ca_crt, ca_key = load_certificate(ca_crt_path, ca_key_path)
 
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
@@ -292,7 +292,7 @@ class CertificateDatabase:
                 if len(line) != 5:
                     continue
 
-                (status, issued, expires, serial_num, name) = line
+                status, issued, expires, serial_num, name = line
                 issued = dt.fromisoformat(issued)
                 expires = dt.fromisoformat(expires)
                 serial_num = int(serial_num, 16)
@@ -311,7 +311,7 @@ class CertificateDatabase:
         if serial_num not in self.cert_db_sn:
             raise IndexError("Unable to find certificate")
 
-        now = dt.now()
+        now = dt.now(timezone.utc).replace(tzinfo=None)
         if revocation_date is None:
             revocation_date = now
 
@@ -328,8 +328,8 @@ class CertificateDatabase:
 
         self.cert_db_sn[cert.serial_number] = {
             "status": "V",
-            "issued": cert.not_valid_before,
-            "expires": cert.not_valid_after,
+            "issued": cert.not_valid_before_utc.replace(tzinfo=None),
+            "expires": cert.not_valid_after_utc.replace(tzinfo=None),
             "serial_num": cert.serial_number,
             "name": common_name,
         }

@@ -33,7 +33,7 @@ def arg_parse():
 
 
 def main():
-    (argp, args) = arg_parse()
+    argp, args = arg_parse()
 
     commands = {
         "setup": cli.setup_taky,

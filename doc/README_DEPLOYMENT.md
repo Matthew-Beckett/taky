@@ -13,22 +13,22 @@ This is the most standard method of installation, and requires root access to
 your computer.
 
 Step 1. Make sure your system has python3 and pip. Remember, this requires
-python >= 3.6!
+python >= 3.10!
 
 ```
 $ sudo apt install python3 python3-pip redis-server
 $ python3 --version
-Python 3.8.5
-
-# Upgrade pip -- the vendor's distribution may be outdated
-$ sudo -H python3 -m pip install --upgrade pip
+Python 3.14.7
 ```
 
-Step 2. Install taky from pip
+Step 2. Install taky from PyPI
 
 ```
 $ sudo -H python3 -m pip install taky
 ```
+
+If you prefer [uv](https://docs.astral.sh/uv/), `sudo uv pip install --system
+taky` does the same thing.
 
 And you're done! Should you ever need to upgrade taky, simply run
 
@@ -44,29 +44,20 @@ want packages to interfere with each other. This is not the general use case.
 If you don't know what this use case is for, then you probably don't need it!
 
 This method creates a self-contained python deployment, isolated from the rest
-of your system. Make sure you have sourced the `bin/activate` file for your
-virtual environment!
+of your system. The easiest way to do this today is with `uv`, which manages
+the environment and even the Python interpreter for you.
 
 Step 1. Install requirements
 
 ```
-$ sudo apt install python3 python3-pip redis-server
-
-$ python3 --version
-Python 3.8.5
-
-# Upgrade pip -- the vendor's distribution may be outdated
-$ sudo -H python3 -m pip install --upgrade pip
-
-# Install virtualenv
-$ sudo -H python3 -m pip install virtualenv
+$ sudo apt install redis-server
+$ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 Step 2. Setup the virtual environment for python, and activate it
 
 ```
-$ mkdir taky_venv
-$ python3 -m virtualenv taky_venv
+$ uv venv taky_venv
 $ . taky_venv/bin/activate
 (taky_venv) $
 ```
@@ -74,7 +65,7 @@ $ . taky_venv/bin/activate
 Step 3. Install Taky
 
 ```
-(taky_venv) $ python3 -m pip install taky
+(taky_venv) $ uv pip install taky
 ```
 
 ## Configuration

@@ -69,7 +69,7 @@ def main():
     """taky COT server"""
     ret = 0
 
-    (argp, args) = arg_parse()
+    argp, args = arg_parse()
     logging.basicConfig(level=args.log_level.upper(), stream=sys.stderr)
     logging.info("taky v%s", __version__)
 

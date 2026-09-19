@@ -1,6 +1,6 @@
 import os
 import unittest as ut
-import mock
+from unittest import mock
 
 from taky import cot
 from taky.config import load_config, app_config

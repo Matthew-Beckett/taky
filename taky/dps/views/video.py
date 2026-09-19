@@ -15,7 +15,7 @@ def marti_video_upload():
     Accepts an XML document of video feeds, and saves them
     to the video feed directory
     """
-    parser = etree.XMLParser(resolve_entities=True)
+    parser = etree.XMLParser(resolve_entities=False)
     try:
         parser.feed(request.data)
         elm = parser.close()
@@ -66,7 +66,7 @@ def marti_video_index():
         return etree.tostring(doc, xml_declaration=True)
 
     # Get ready to parse XML files
-    parser = etree.XMLParser(resolve_entities=True)
+    parser = etree.XMLParser(resolve_entities=False)
     for fname in os.listdir(feeds_dir):
         fname = os.path.join(feeds_dir, fname)
         if not os.path.isfile(fname):

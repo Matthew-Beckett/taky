@@ -2,7 +2,7 @@ import os
 import queue
 import unittest as ut
 from datetime import datetime as dt
-from datetime import timedelta
+from datetime import timedelta, timezone
 
 from lxml import etree
 
@@ -27,7 +27,7 @@ class RouterTestcase(ut.TestCase):
         )
 
         elm = etree.fromstring(XML_S)
-        now = dt.utcnow()
+        now = dt.now(timezone.utc).replace(tzinfo=None)
         td = timedelta(days=10)
 
         elm.set("time", now.isoformat())
@@ -93,15 +93,15 @@ class RouterTestcase(ut.TestCase):
         gc.chat_parent = "RootContactGroup"
 
         gc.message = "Hello world!"
-        gc.message_ts = dt.utcnow()
+        gc.message_ts = dt.now(timezone.utc).replace(tzinfo=None)
 
         evt = models.Event(
             uid="GeoChat.ANDROID-deadbeef.TESTCASE.563040b9-2ac9-4af3-9e01-4cb2b05d98ea",
             etype="b-t-f",
             how="h-g-i-g-o",
-            time=dt.utcnow(),
-            start=dt.utcnow(),
-            stale=dt.utcnow() + timedelta(1000),
+            time=dt.now(timezone.utc).replace(tzinfo=None),
+            start=dt.now(timezone.utc).replace(tzinfo=None),
+            stale=dt.now(timezone.utc).replace(tzinfo=None) + timedelta(1000),
         )
         evt.detail = gc
 
@@ -126,7 +126,7 @@ class RouterTestcase(ut.TestCase):
 
         elm = etree.fromstring(XML_EMPTY_MARTI_BC)
         # TODO: Mock time, instead of using real time
-        now = dt.utcnow()
+        now = dt.now(timezone.utc).replace(tzinfo=None)
         td = timedelta(days=10)
 
         elm.set("time", now.isoformat())

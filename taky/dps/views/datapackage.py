@@ -3,9 +3,9 @@ import json
 import hashlib
 
 from datetime import datetime as dt
+from datetime import timezone
 
 from flask import request, send_file
-from pytz import UTC
 from werkzeug.utils import secure_filename
 
 from taky.dps import app, requires_auth
@@ -68,7 +68,7 @@ def datapackage_search():
     """
     ret = []
     for item in os.listdir(app.config["UPLOAD_PATH"]):
-        
+
         path = os.path.join(app.config["UPLOAD_PATH"], item)
         if not os.path.isfile(path):
             continue
@@ -77,7 +77,7 @@ def datapackage_search():
         meta = get_meta(f_name=item)
         if meta and meta.get("Visibility", "public") == "public":
             ret.append(meta)
-    
+
     return {"resultCount": len(ret), "results": ret}
 
 
@@ -103,7 +103,8 @@ def datapackage_get():
 
     return send_file(name, as_attachment=True, download_name=meta["Name"])
 
-#Experimental reverse-engineered endpoint for iTAK Datapackage upload
+
+# Experimental reverse-engineered endpoint for iTAK Datapackage upload
 @app.route("/Marti/sync/upload", methods=["POST"])
 @requires_auth
 def datapackage_upload_itak():
@@ -151,11 +152,11 @@ def datapackage_upload_itak():
         "Name": name,  # File name on the server
         "Hash": f_hash.hexdigest(),  # SHA-256, checked
         "PrimaryKey": 1,  # Not used, must be >= 0
-        "SubmissionDateTime": dt.now(UTC).isoformat() + "Z",
+        "SubmissionDateTime": dt.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "SubmissionUser": sub_user,
         "CreatorUid": creator_uid,
         "Keywords": f"{keywords}",
-        "MIMEType": "application/x-zip-compressed", # iTAK sends a zip file
+        "MIMEType": "application/x-zip-compressed",  # iTAK sends a zip file
         "Size": os.path.getsize(file_path),  # Checked, do not fake
         "Visibility": "public",
     }
@@ -165,6 +166,7 @@ def datapackage_upload_itak():
     # src/main/java/com/atakmap/android/missionpackage/http/MissionPackageDownloader.java:539
     # This is needed for client-to-client data package transmission
     return url_for(f_hash.hexdigest())
+
 
 @app.route("/Marti/sync/missionupload", methods=["POST"])
 @requires_auth
@@ -210,7 +212,7 @@ def datapackage_upload():
         "Name": asset_fp.filename,  # File name on the server
         "Hash": f_hash,  # SHA-256, checked
         "PrimaryKey": 1,  # Not used, must be >= 0
-        "SubmissionDateTime": dt.utcnow().isoformat() + "Z",
+        "SubmissionDateTime": dt.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "SubmissionUser": sub_user,
         "CreatorUid": creator_uid,
         "Keywords": "kw",

@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+ - Migrated packaging from setuptools/pip to `pyproject.toml` + Astral uv
+ - Raised minimum Python version to 3.10 (developed and tested on 3.14)
+ - Updated dependencies: lxml>=6, cryptography>=42, flask>=3.1,
+   gunicorn>=23, redis>=5.2, python-dateutil>=2.9
+ - Replaced deprecated `pkg_resources` with `importlib.metadata`
+ - Replaced deprecated `datetime.utcnow()` with timezone-aware calls
+ - Replaced `redis.StrictRedis` with `redis.Redis`
+ - Use `not_valid_*_utc` certificate attributes from cryptography
+ - Moved coverage configuration into `pyproject.toml`; dropped tox
+
+### Fixed
+ - `Detail.__repr__` now returns a string
+ - `Persistence.get_event` looks up the UID argument instead of a literal
+ - iTAK datapackage `SubmissionDateTime` no longer emits a malformed
+   `+00:00Z` timestamp, and no longer requires `pytz`
+
+### Security
+ - Data package server video feed XML parsers now run with
+   `resolve_entities=False`, matching the documented XXE hardening
+
 ## [0.9] - 2024/04/05
 
 ### Fixed

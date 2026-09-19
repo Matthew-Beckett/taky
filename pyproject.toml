@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=77", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "taky"
+description = "A simple TAK server and COT router"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Tim K", email = "tpkuester@gmail.com" }]
+requires-python = ">=3.10"
+dynamic = ["version"]
+dependencies = [
+    "lxml>=6.0",
+    "cryptography>=42.0.0",
+    "python-dateutil>=2.9.0",
+    "flask>=3.1",
+    "gunicorn>=23.0",
+    "redis>=5.2",
+]
+classifiers = [
+    "Topic :: Communications",
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Homepage = "https://github.com/tkuester/taky"
+
+[project.scripts]
+taky = "taky.cot.__main__:main"
+taky_dps = "taky.dps.__main__:main"
+takyctl = "taky.cli.__main__:main"
+
+[dependency-groups]
+dev = [
+    "black>=26.0",
+    "coverage>=7.6",
+    "pre-commit>=4.2",
+    "pylint>=4.0",
+    "pyright>=1.1.400",
+]
+
+[tool.setuptools.packages.find]
+include = ["taky*"]
+
+[tool.black]
+target-version = ["py310"]
+
+[tool.setuptools_scm]
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+include = ["taky/*"]
+exclude_lines = [
+    "def __repr__",
+    "raise NotImplementedError",
+    "except PackageNotFoundError:",
+    "if __name__ == .__main__.:",
+]

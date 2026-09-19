@@ -12,9 +12,9 @@ In this case, we will pretend your username is "bluetack".
 
 ```
 # Install Dependencies -- yum for CentOS
+# (or install uv: curl -LsSf https://astral.sh/uv/install.sh | sh
+#  and run `sudo uv pip install --system taky` below)
 bluetack $ sudo apt install python3 python3-pip
-[...]
-bluetack $ sudo python3 -m pip install --upgrade pip
 [...]
 
 # Install taky

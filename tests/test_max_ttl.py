@@ -44,9 +44,9 @@ class RouterMaxTTLTestcase(ut.TestCase):
     @mock.patch("taky.cot.models.event.dt")
     @mock.patch("taky.cot.router.dt")
     def test_max_ttl(self, mock_dt1, mock_dt2, mock_dt3):
-        mock_dt1.utcnow = mock.Mock(return_value=self.now)
-        mock_dt2.utcnow = mock.Mock(return_value=self.now)
-        mock_dt3.utcnow = mock.Mock(return_value=self.now)
+        mock_dt1.now = mock.Mock(return_value=self.now)
+        mock_dt2.now = mock.Mock(return_value=self.now)
+        mock_dt3.now = mock.Mock(return_value=self.now)
 
         # TK1 connects, and identifies
         self.router.client_connect(self.tk1)

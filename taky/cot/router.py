@@ -3,7 +3,7 @@ import time
 import enum
 import logging
 from datetime import datetime as dt
-from datetime import timedelta
+from datetime import timedelta, timezone
 
 from taky.config import app_config
 from . import models
@@ -138,7 +138,9 @@ class COTRouter:
         # If configured, constrain events to a max TTL
         if self.max_ttl >= 0:
             if evt.persist_ttl > self.max_ttl:
-                evt.stale = dt.utcnow() + timedelta(seconds=self.max_ttl)
+                evt.stale = dt.now(timezone.utc).replace(tzinfo=None) + timedelta(
+                    seconds=self.max_ttl
+                )
 
         # Special handling for chat messages
         if isinstance(evt.detail, models.GeoChat):

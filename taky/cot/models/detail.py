@@ -9,11 +9,11 @@ class Detail:
     def __init__(self, elm):
         self.elm = elm
 
-    def __repr__(self):
-        "<GenericDetail>"
+    def __repr__(self) -> str:
+        return "<GenericDetail>"
 
     @staticmethod
-    def is_type(tags):  # pylint: disable=unused-argument
+    def is_type(tags) -> bool:  # pylint: disable=unused-argument
         """
         Examines the tags in a detail to determine if it belongs to this class
         """

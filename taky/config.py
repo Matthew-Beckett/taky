@@ -77,7 +77,7 @@ def load_config(path=None, explicit=False):
         ret_config.set("dp_server", "upload_path", "./dp-user")
 
     # Make directories absolute
-    for (sect, opt) in [
+    for sect, opt in [
         ("taky", "root_dir"),
         ("dp_server", "upload_path"),
         ("cot_server", "log_cot"),

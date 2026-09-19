@@ -31,6 +31,7 @@ UDP Like Commands
 """
 
 from datetime import datetime as dt
+from datetime import timezone
 import logging
 
 from lxml import etree
@@ -148,7 +149,7 @@ class Persistence(BasePersistence):
 
     def get_event(self, uid):
         self.prune()
-        return self.events.get("uid")
+        return self.events.get(uid)
 
     def get_all(self):
         self.prune()
@@ -161,7 +162,7 @@ class Persistence(BasePersistence):
         Go through the database, and delete items that have expired
         """
         uids = []
-        now = dt.utcnow()
+        now = dt.now(timezone.utc).replace(tzinfo=None)
 
         for item in self.events.values():
             if now > item.stale:
@@ -197,10 +198,10 @@ class RedisPersistence(BasePersistence):
 
         if conn_str:
             self.lgr.info("Connecting to %s", conn_str)
-            self.rds = redis.StrictRedis.from_url(conn_str)
+            self.rds = redis.Redis.from_url(conn_str)
         else:
             self.lgr.info("Connecting to default redis")
-            self.rds = redis.StrictRedis()
+            self.rds = redis.Redis()
 
         try:
             total = len(self.rds.keys(f"{self.rds_ks}:*"))
