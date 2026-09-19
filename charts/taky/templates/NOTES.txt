@@ -7,8 +7,16 @@ Ports on service {{ include "taky.fullname" . }}:
 {{- if not .Values.ssl.enabled }}
 
 WARNING: SSL is disabled. Traffic is plaintext and clients are not
-authenticated by certificate. Set ssl.enabled=true and ssl.secretName
-for production use.
+authenticated by certificate. Set ssl.enabled=true for production use;
+without ssl.secretName a self-signed CA is bootstrapped into the
+persistent volume.
+{{- end }}
+
+{{- if and .Values.ssl.enabled (not .Values.ssl.secretName) }}
+
+A self-signed CA and server certificate are generated on first boot in
+/var/taky/ssl on the persistent volume. Build client datapackages with:
+  kubectl exec -it deploy/{{ include "taky.fullname" . }} -n {{ .Release.Namespace }} -c cot -- takyctl build_client <name>
 {{- end }}
 
 {{- if not .Values.config.publicIp }}

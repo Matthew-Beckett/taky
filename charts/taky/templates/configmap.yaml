@@ -1,3 +1,6 @@
+{{- if and .Values.ssl.enabled (not .Values.ssl.secretName) (not .Values.persistence.enabled) -}}
+{{- fail "ssl.enabled without ssl.secretName requires persistence.enabled=true (bootstrapped certificates are stored on the PVC)" -}}
+{{- end -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -27,10 +30,19 @@ data:
     enabled = {{ ternary "true" "false" .Values.ssl.enabled }}
     {{- if .Values.ssl.enabled }}
     client_cert_required = true
+    {{- if .Values.ssl.secretName }}
     ca = /etc/taky/ssl/ca.crt
     ca_key = /etc/taky/ssl/ca.key
     cert = /etc/taky/ssl/server.crt
     key = /etc/taky/ssl/server.key
     server_p12 = /etc/taky/ssl/server.p12
+    {{- else }}
+    ca = /var/taky/ssl/ca.crt
+    ca_key = /var/taky/ssl/ca.key
+    cert = /var/taky/ssl/server.crt
+    key = /var/taky/ssl/server.key
+    server_p12 = /var/taky/ssl/server.p12
+    {{- end }}
+    cert_db = /var/taky/ssl/cert-db.txt
     server_p12_pw = atakatak
     {{- end }}

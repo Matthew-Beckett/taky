@@ -48,10 +48,13 @@ config:
 
 ssl:
   enabled: false
-  # Required when enabled: name of an existing Secret mounted at
+  # Bring-your-own certs: name of an existing Secret mounted at
   # /etc/taky/ssl containing ca.crt, ca.key, server.crt, server.key,
   # and server.p12.
   secretName: ""
+  # When enabled without secretName, a self-signed CA and server
+  # certificate are generated on first boot into the persistent volume
+  # at /var/taky/ssl. Requires persistence.enabled=true.
 
 # Persists /var/taky (datapackage uploads and metadata). When disabled
 # an emptyDir is used and uploads are lost on pod restart.

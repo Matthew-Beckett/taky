@@ -45,6 +45,45 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/taky
+        {{- if .Values.ssl.enabled }}
+        - name: init-certs
+          image: {{ include "taky.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - python
+            - -c
+            - |
+              import os
+              from taky.config import load_config
+              from taky.util import anc
+              load_config("/etc/taky/taky.conf")
+              ssl_dir = "/var/taky/ssl"
+              os.makedirs(ssl_dir, exist_ok=True)
+              {{- if not .Values.ssl.secretName }}
+              ca, ca_key = f"{ssl_dir}/ca.crt", f"{ssl_dir}/ca.key"
+              if not os.path.exists(ca):
+                  anc.make_ca(ca, ca_key)
+              if not os.path.exists(f"{ssl_dir}/server.crt"):
+                  cert = anc.make_cert(
+                      path=ssl_dir,
+                      f_name="server",
+                      hostname={{ .Values.config.publicIp | default .Values.config.hostname | quote }},
+                      cert_pw="atakatak",
+                      cert_auth=(ca, ca_key),
+                      dump_pem=True,
+                      key_in_pem=False,
+                      is_server_cert=True,
+                  )
+                  anc.CertificateDatabase().add_certificate(cert)
+              {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/taky/taky.conf
+              subPath: taky.conf
+              readOnly: true
+            - name: data
+              mountPath: /var/taky
+        {{- end }}
       containers:
         - name: cot
           {{- with .Values.securityContext }}
@@ -74,7 +113,7 @@ spec:
               readOnly: true
             - name: data
               mountPath: /var/taky
-            {{- if .Values.ssl.enabled }}
+            {{- if .Values.ssl.secretName }}
             - name: ssl
               mountPath: /etc/taky/ssl
               readOnly: true
@@ -111,7 +150,7 @@ spec:
               readOnly: true
             - name: data
               mountPath: /var/taky
-            {{- if .Values.ssl.enabled }}
+            {{- if .Values.ssl.secretName }}
             - name: ssl
               mountPath: /etc/taky/ssl
               readOnly: true
@@ -130,10 +169,10 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
-        {{- if .Values.ssl.enabled }}
+        {{- if .Values.ssl.secretName }}
         - name: ssl
           secret:
-            secretName: {{ required "ssl.secretName is required when ssl.enabled=true" .Values.ssl.secretName }}
+            secretName: {{ .Values.ssl.secretName }}
         {{- end }}
         {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
