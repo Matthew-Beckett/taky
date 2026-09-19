@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "taky.fullname" . }}
+  labels:
+    {{- include "taky.labels" . | nindent 4 }}
+data:
+  taky.conf: |
+    [taky]
+    hostname = {{ .Values.config.hostname }}
+    node_id = {{ .Values.config.nodeId }}
+    bind_ip = 0.0.0.0
+    root_dir = /var/taky
+    {{- with .Values.config.publicIp }}
+    public_ip = {{ . }}
+    {{- end }}
+    {{- with .Values.config.redis }}
+    redis = {{ . }}
+    {{- end }}
+
+    [cot_server]
+
+    [dp_server]
+    upload_path = /var/taky/dp-user
+
+    [ssl]
+    enabled = {{ ternary "true" "false" .Values.ssl.enabled }}
+    {{- if .Values.ssl.enabled }}
+    client_cert_required = true
+    ca = /etc/taky/ssl/ca.crt
+    ca_key = /etc/taky/ssl/ca.key
+    cert = /etc/taky/ssl/server.crt
+    key = /etc/taky/ssl/server.key
+    server_p12 = /etc/taky/ssl/server.p12
+    server_p12_pw = atakatak
+    {{- end }}

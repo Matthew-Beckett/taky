@@ -1,0 +1,26 @@
+Taky {{ .Chart.AppVersion }} is deployed as {{ include "taky.fullname" . }}.
+
+Ports on service {{ include "taky.fullname" . }}:
+  cot: {{ include "taky.cotPort" . }} (COT server{{ if .Values.ssl.enabled }}, TLS{{ end }})
+  dps: {{ include "taky.dpsPort" . }} (Marti API{{ if .Values.ssl.enabled }}, TLS{{ end }})
+
+{{- if not .Values.ssl.enabled }}
+
+WARNING: SSL is disabled. Traffic is plaintext and clients are not
+authenticated by certificate. Set ssl.enabled=true and ssl.secretName
+for production use.
+{{- end }}
+
+{{- if not .Values.config.publicIp }}
+
+NOTE: config.publicIp is unset. Set it to an address clients can reach
+(e.g. the Service LoadBalancer IP) before generating client datapackages.
+{{- end }}
+
+{{- if eq .Values.service.type "LoadBalancer" }}
+Get the external address with:
+  kubectl get svc --namespace {{ .Release.Namespace }} {{ include "taky.fullname" . }} -w
+{{- else if eq .Values.service.type "ClusterIP" }}
+Port-forward to test connectivity:
+  kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "taky.fullname" . }} {{ include "taky.dpsPort" . }}:dps
+{{- end }}

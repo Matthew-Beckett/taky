@@ -1,0 +1,6 @@
+apiVersion: v2
+name: taky
+description: A lightweight TAK server and COT router
+type: application
+version: 0.1.0
+appVersion: "0.9.6"

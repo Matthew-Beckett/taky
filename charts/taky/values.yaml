@@ -1,0 +1,80 @@
+# Default values for taky.
+
+# Taky is stateful and runs a single replica. Both the COT server (taky)
+# and the data package server (taky_dps) run in the same pod so they can
+# share the unix management socket under /var/taky.
+replicaCount: 1
+
+global:
+  image:
+    # Overrides image.registry for all containers (e.g. air-gapped mirror).
+    registry: ""
+
+image:
+  # Defaults to ghcr.io when unset; global.image.registry is used only
+  # when this is empty.
+  registry: ""
+  repository: matthew-beckett/taky
+  # Defaults to the chart appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  annotations: {}
+  # Ports are derived from ssl.enabled and are not configurable here:
+  #   ssl.enabled=false: cot 8087, dps 8080
+  #   ssl.enabled=true:  cot 8089, dps 8443
+  # TAK clients typically need type: LoadBalancer or NodePort.
+
+# Rendered into /etc/taky/taky.conf.
+config:
+  hostname: taky.local
+  nodeId: TAKY
+  # Advertised to clients in generated datapackages. Set this to an
+  # address clients can reach (e.g. the Service's LoadBalancer IP).
+  publicIp: ""
+  # "true" for localhost redis, or a redis:// connect string.
+  redis: ""
+
+ssl:
+  enabled: false
+  # Required when enabled: name of an existing Secret mounted at
+  # /etc/taky/ssl containing ca.crt, ca.key, server.crt, server.key,
+  # and server.p12.
+  secretName: ""
+
+# Persists /var/taky (datapackage uploads and metadata). When disabled
+# an emptyDir is used and uploads are lost on pod restart.
+persistence:
+  enabled: false
+  size: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClass: ""
+
+resources: {}
+  # limits:
+  #   cpu: 500m
+  #   memory: 256Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# Additional volumeMounts on both containers.
+volumeMounts: []
+# Additional volumes on the pod.
+volumes: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
