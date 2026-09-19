@@ -24,7 +24,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       new_tag: ${{ steps.bump.outputs.new_tag }}
-      new_version: ${{ steps.bump.outputs.new_version }}
     steps:
     - uses: actions/checkout@v7
       with:
@@ -87,4 +86,4 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         build-args: |
-          SETUPTOOLS_SCM_PRETEND_VERSION=${{ needs.tag.outputs.new_version }}
+          SETUPTOOLS_SCM_PRETEND_VERSION=${{ needs.tag.outputs.new_tag }}
