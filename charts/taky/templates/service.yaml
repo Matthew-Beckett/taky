@@ -19,5 +19,11 @@ spec:
       port: {{ include "taky.dpsPort" . }}
       targetPort: dps
       protocol: TCP
+    {{- range .Values.service.extraPorts }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .targetPort }}
+      protocol: {{ .protocol | default "TCP" }}
+    {{- end }}
   selector:
     {{- include "taky.selectorLabels" . | nindent 4 }}

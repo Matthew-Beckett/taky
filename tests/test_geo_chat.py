@@ -38,3 +38,19 @@ class GeoChatTestcase(ut.TestCase):
         self.assertEqual(chat.message, "test")
 
         self.assertEqual(chat.dst_uid, "ANDROID-cafebabe")
+
+    def test_custom_team_name(self):
+        """
+        A team chat to a non-standard group name must parse -- Teams()
+        raises ValueError for unknown names, which would reject the whole
+        message.
+        """
+        xml = XML_S.replace('parent="RootContactGroup"', 'parent="TeamGroups"').replace(
+            'chatroom="JOKER MAN"', 'chatroom="MyCustomGroup"'
+        )
+        event = models.Event.from_elm(etree.fromstring(xml))
+        chat = event.detail
+
+        self.assertIsInstance(chat, models.GeoChat)
+        self.assertEqual(chat.chatroom, "MyCustomGroup")
+        self.assertIsNone(chat.dst_team)

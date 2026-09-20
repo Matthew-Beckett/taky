@@ -31,7 +31,7 @@ class Event:
         self.stale = stale
 
         self.point = Point()
-        self.detail = None
+        self.detail: Detail | None = None
 
     def __repr__(self):
         return '<Event uid="%s" etype="%s" time="%s">' % (
@@ -97,13 +97,20 @@ class Event:
     @property
     def as_element(self):
         ret = etree.Element("event")
-        ret.set("version", self.version)
-        ret.set("uid", self.uid)
-        ret.set("type", self.etype)
-        ret.set("how", self.how)
-        ret.set("time", self.time.isoformat(timespec="milliseconds") + "Z")
-        ret.set("start", self.start.isoformat(timespec="milliseconds") + "Z")
-        ret.set("stale", self.stale.isoformat(timespec="milliseconds") + "Z")
+        ret.set("version", self.version or "2.0")
+        for attr, val in (
+            ("uid", self.uid),
+            ("type", self.etype),
+            ("how", self.how),
+            ("time", self.time),
+            ("start", self.start),
+            ("stale", self.stale),
+        ):
+            if val is None:
+                continue
+            if isinstance(val, dt):
+                val = val.isoformat(timespec="milliseconds") + "Z"
+            ret.set(attr, val)
         ret.append(self.point.as_element)
         if self.detail is not None:
             ret.append(self.detail.as_element)

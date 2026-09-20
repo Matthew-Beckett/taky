@@ -252,6 +252,11 @@ class COTServer:
                 self.client_disconnect(client, "User banned")
                 return
 
+        # Announce TAK Protocol support so clients expecting a server
+        # greeting (e.g. iTAK) know the stream is alive
+        if not client.monitor:
+            client.proto_support()
+
         self.router.send_persist(client)
 
     def client_disconnect(self, client, reason=None):
@@ -372,5 +377,5 @@ class COTServer:
 
     def mon_packet(self, evt):
         for client in self.clients.values():
-            if client.monitor:
+            if getattr(client, "monitor", False):
                 client.send_event(evt)

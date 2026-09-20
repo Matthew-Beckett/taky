@@ -194,5 +194,10 @@ class MgmtClient(SocketClient):
         except (etree.XMLSyntaxError, models.UnmarshalError) as exc:
             return {"error": f"Unable to parse event: {exc}"}
 
-        self.server.router.route(None, evt)
+        try:
+            self.server.router.route(None, evt)
+        except Exception as exc:  # pylint: disable=broad-except
+            self.lgr.error("Unable to route broadcast event: %s", exc, exc_info=exc)
+            return {"error": "Unable to route event"}
+
         return {"routed": evt.uid}

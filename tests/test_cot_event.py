@@ -64,3 +64,27 @@ class COTTestcase(ut.TestCase):
         del self.elm[1]
         evt = models.Event.from_elm(self.elm)
         self.assertTrue(evt.detail is None)
+
+    def test_marshall_missing_attrs(self):
+        """
+        Events missing optional attributes (version, how, timestamps) must
+        serialize without raising -- a persisted event lacking them would
+        otherwise crash send_persist for every subsequent client.
+        """
+        evt = models.Event(
+            uid="test-missing",
+            etype="a-f-G",
+            how=None,
+            time=None,
+            start=None,
+            stale=None,
+        )
+        evt.version = None
+
+        elm = evt.as_element
+        self.assertEqual(elm.get("version"), "2.0")
+        self.assertEqual(elm.get("uid"), "test-missing")
+        self.assertEqual(elm.get("type"), "a-f-G")
+        self.assertIsNone(elm.get("how"))
+        self.assertIsNone(elm.get("time"))
+        self.assertIsNone(elm.get("stale"))

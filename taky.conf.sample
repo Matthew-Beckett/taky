@@ -29,6 +29,9 @@
 [ssl]
 # SSL is disabled by default. Set enabled to "true" to enable
 #enabled=false
+# Note: with SSL disabled, clients cannot present certificates, so
+# the Marti API (taky_dps) treats requests as anonymous rather than
+# rejecting them with HTTP 401.
 
 # Should taky require clients to have a certificate?
 #client_cert_required=false

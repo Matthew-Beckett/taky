@@ -4,7 +4,9 @@ from .errors import UnmarshalError
 from .detail import Detail
 from .teams import Teams
 
-TAKUSER_TAGS = set(["takv", "contact", "__group"])
+# __group is not required -- clients without a configured team still
+# identify as a TAKUser (with group=None) rather than staying anonymous.
+TAKUSER_TAGS = set(["takv", "contact"])
 
 
 class TAKDevice:
@@ -88,8 +90,12 @@ class TAKUser(Detail):
             elif d_elm.tag == "status":
                 ret.battery = d_elm.get("battery")
             elif d_elm.tag == "track":
-                ret.course = float(d_elm.get("course"))
-                ret.speed = float(d_elm.get("speed"))
+                try:
+                    ret.course = float(d_elm.get("course"))
+                    ret.speed = float(d_elm.get("speed"))
+                except (TypeError, ValueError):
+                    ret.course = None
+                    ret.speed = None
 
         return ret
 

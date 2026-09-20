@@ -44,6 +44,22 @@ service:
   #   ssl.enabled=false: cot 8087, dps 8080
   #   ssl.enabled=true:  cot 8089, dps 8443
   # TAK clients typically need type: LoadBalancer or NodePort.
+  #
+  # extraPorts maps additional service ports onto the cot/dps
+  # container ports. Useful when clients insist on standard TAK
+  # ports -- e.g. an iTAK datapackage that references 8446 for the
+  # Marti API or 8089 for the COT stream. Note the underlying
+  # protocol is unchanged: mapping 8446->dps still serves plain
+  # HTTP when ssl.enabled=false, so TLS-configured clients will
+  # still fail. targetPort may be a container port name or number.
+  # extraPorts:
+  #   - name: dps-std
+  #     port: 8446
+  #     targetPort: dps
+  #   - name: cot-std
+  #     port: 8089
+  #     targetPort: cot
+  extraPorts: []
 
 # Rendered into /etc/taky/taky.conf.
 config:

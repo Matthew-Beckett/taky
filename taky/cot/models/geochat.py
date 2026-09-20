@@ -99,7 +99,11 @@ class GeoChat(Detail):
 
         gch.chatroom = chat.get("chatroom")
         if gch.chat_parent == ChatParents.TEAM.value:
-            gch.dst_team = Teams(gch.chatroom)
+            try:
+                gch.dst_team = Teams(gch.chatroom)
+            except ValueError:
+                # Custom group names can't be mapped to a known team
+                pass
         elif gch.chatroom != ALL_CHAT_ROOMS:
             # Router will have to fill out .dst
             gch.dst_uid = chat.get("id")

@@ -36,3 +36,31 @@ class TAKUserTestcase(ut.TestCase):
         )
 
         self.assertTrue(elements_equal(self.answer, tak_u.as_element))
+
+    def test_no_group_is_type(self):
+        """
+        A SA detail without __group must still classify as TAKUser so
+        group-less clients can be identified and receive directed messages.
+        """
+        elm = etree.fromstring(
+            '<detail><takv os="30" version="1" device="d" platform="ATAK-CIV"/>'
+            '<contact callsign="NOGRP" endpoint="*:-1:stcp"/></detail>'
+        )
+        self.assertTrue(models.TAKUser.is_type({"takv", "contact"}))
+
+        user = models.TAKUser.from_elm(elm, uid="x")
+        self.assertEqual(user.callsign, "NOGRP")
+        self.assertIsNone(user.group)
+
+    def test_track_missing_attrs(self):
+        """
+        A <track> element missing course/speed must not cause the whole
+        event to be rejected.
+        """
+        elm = etree.fromstring(
+            '<detail><takv os="30" version="1" device="d" platform="ATAK-CIV"/>'
+            '<contact callsign="X"/><track/></detail>'
+        )
+        user = models.TAKUser.from_elm(elm, uid="x")
+        self.assertIsNone(user.course)
+        self.assertIsNone(user.speed)

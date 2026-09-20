@@ -307,7 +307,11 @@ class TAKClient:
                     continue
 
                 if evt.etype == "t-x-c-t":
-                    self.pong()
+                    self.pong(evt.uid)
+                    continue
+
+                if evt.etype == "t-x-takp-q":
+                    self.proto_deny()
                     continue
 
                 if evt.etype.startswith("a"):
@@ -356,14 +360,17 @@ class TAKClient:
             else:
                 self.user = evt.detail
 
-    def pong(self):
+    def pong(self, uid=None):
         """
         Generate and send a TAK pong. Clients that do not receive a pong in
         an appropriate amount of time will disconnect.
+
+        The pong UID is correlated to the ping's UID (<uid>-pong), matching
+        the behaviour of other TAK servers.
         """
         now = dt.now(timezone.utc).replace(tzinfo=None)
         pong = models.Event(
-            uid="takPong",
+            uid=f"{uid}-pong" if uid else "takPong",
             etype="t-x-c-t-r",
             how="h-g-i-g-o",
             time=now,
@@ -371,6 +378,50 @@ class TAKClient:
             stale=now + timedelta(seconds=20),
         )
         self.send_event(pong)
+
+    def proto_support(self):
+        """
+        Announce TAK Protocol support to the client (t-x-takp-v). taky only
+        speaks traditional streaming CoT XML, so no TAK Protocol versions
+        are advertised -- the empty TakControl tells clients to remain in
+        XML mode.
+        """
+        now = dt.now(timezone.utc).replace(tzinfo=None)
+        detail_elm = etree.Element("detail")
+        etree.SubElement(detail_elm, "TakControl")
+
+        evt = models.Event(
+            uid="takProtoAnnounce",
+            etype="t-x-takp-v",
+            how="m-g",
+            time=now,
+            start=now,
+            stale=now + timedelta(seconds=30),
+        )
+        evt.detail = models.Detail(detail_elm)
+        self.send_event(evt)
+
+    def proto_deny(self):
+        """
+        Respond to a TAK Protocol negotiation request (t-x-takp-q) denying
+        the requested version. The client should remain in traditional
+        streaming XML mode.
+        """
+        now = dt.now(timezone.utc).replace(tzinfo=None)
+        detail_elm = etree.Element("detail")
+        ctrl = etree.SubElement(detail_elm, "TakControl")
+        etree.SubElement(ctrl, "TakResponse", attrib={"status": "false"})
+
+        evt = models.Event(
+            uid="takProtoDeny",
+            etype="t-x-takp-v",
+            how="m-g",
+            time=now,
+            start=now,
+            stale=now + timedelta(seconds=30),
+        )
+        evt.detail = models.Detail(detail_elm)
+        self.send_event(evt)
 
 
 class SocketTAKClient(TAKClient, SocketClient):

@@ -51,7 +51,16 @@ class DPSTestcase(ut.TestCase):
 
 class TestVersion(DPSTestcase):
     def test_auth_required(self):
+        app.config["SSL_ENABLED"] = True
         self.assertEqual(self.cli.get("/Marti/api/version").status_code, 401)
+
+    def test_anonymous_when_ssl_disabled(self):
+        """
+        When SSL is disabled, clients cannot present certificates -- the
+        API must remain usable rather than failing every request with 401.
+        """
+        app.config["SSL_ENABLED"] = False
+        self.assertEqual(self.cli.get("/Marti/api/version").status_code, 200)
 
     def test_version(self):
         resp = self.cli.get("/Marti/api/version", headers=AUTH)

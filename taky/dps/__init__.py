@@ -37,7 +37,12 @@ def requires_auth(func):
 
     @functools.wraps(func)
     def check_headers(*args, **kwargs):
-        if not flask.request.headers.get("X-USER"):
+        # X-USER is injected by the gunicorn worker from the client
+        # certificate. When SSL is disabled, clients cannot authenticate at
+        # all -- fall back to anonymous rather than disabling the API.
+        if not flask.request.headers.get("X-USER") and app.config.get(
+            "SSL_ENABLED", True
+        ):
             flask.abort(401)
         if flask.request.headers.get("X-REVOKED"):
             flask.abort(403)
@@ -51,6 +56,7 @@ def configure_app(config):
     app.config["HOSTNAME"] = config.get("taky", "hostname")
     app.config["NODEID"] = config.get("taky", "node_id")
     app.config["UPLOAD_PATH"] = config.get("dp_server", "upload_path")
+    app.config["SSL_ENABLED"] = config.getboolean("ssl", "enabled")
 
     cot_port = config.getint("cot_server", "port")
     if config.getboolean("ssl", "enabled"):
