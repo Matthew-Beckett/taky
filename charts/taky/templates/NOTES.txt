@@ -15,7 +15,9 @@ persistent volume.
 {{- if and .Values.ssl.enabled (not .Values.ssl.secretName) }}
 
 A self-signed CA and server certificate are generated on first boot in
-/var/taky/ssl on the persistent volume. Build client datapackages with:
+/var/taky/ssl on the persistent volume and published to Secret
+{{ include "taky.fullname" . }}-ssl (restored from it if the PVC is
+re-created empty). Build client datapackages with:
   kubectl exec -it deploy/{{ include "taky.fullname" . }} -n {{ .Release.Namespace }} -c cot -- takyctl build_client <name>
 {{- end }}
 

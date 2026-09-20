@@ -24,6 +24,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      serviceAccountName: {{ include "taky.serviceAccountName" . }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -60,6 +61,58 @@ spec:
               ssl_dir = "/var/taky/ssl"
               os.makedirs(ssl_dir, exist_ok=True)
               {{- if not .Values.ssl.secretName }}
+              import base64
+              import json
+              import ssl as tls
+              import urllib.error
+              import urllib.request
+
+              keys = ["ca.crt", "ca.key", "server.crt", "server.key", "server.p12"]
+              secret_name = {{ printf "%s-ssl" (include "taky.fullname" .) | quote }}
+
+              sa_dir = "/var/run/secrets/kubernetes.io/serviceaccount"
+              with open(f"{sa_dir}/namespace", encoding="utf8") as fp:
+                  namespace = fp.read().strip()
+              with open(f"{sa_dir}/token", encoding="utf8") as fp:
+                  token = fp.read().strip()
+              ctx = tls.create_default_context(cafile=f"{sa_dir}/ca.crt")
+
+              def api(method, path, body=None):
+                  req = urllib.request.Request(
+                      f"https://kubernetes.default.svc{path}",
+                      data=json.dumps(body).encode() if body is not None else None,
+                      method=method,
+                      headers={"Authorization": f"Bearer {token}"},
+                  )
+                  if body is not None:
+                      req.add_header("Content-Type", "application/json")
+                  try:
+                      with urllib.request.urlopen(req, context=ctx) as resp:
+                          return json.load(resp)
+                  except urllib.error.HTTPError as exc:
+                      if exc.code == 404:
+                          return None
+                      raise
+
+              secret = api(
+                  "GET", f"/api/v1/namespaces/{namespace}/secrets/{secret_name}"
+              )
+              secret_data = (secret or {}).get("data") or {}
+
+              # The Secret outlives the PVC: if the volume was re-created
+              # empty, restore the CA and server certificate from it so
+              # existing client datapackages keep working.
+              if not os.path.exists(f"{ssl_dir}/ca.crt") and all(
+                  k in secret_data for k in keys
+              ):
+                  for k in keys:
+                      with open(os.path.join(ssl_dir, k), "wb") as fp:
+                          fp.write(base64.b64decode(secret_data[k]))
+                  crt, _ = anc.load_certificate(
+                      f"{ssl_dir}/server.crt", f"{ssl_dir}/server.key"
+                  )
+                  anc.CertificateDatabase().add_certificate(crt)
+
               ca, ca_key = f"{ssl_dir}/ca.crt", f"{ssl_dir}/ca.key"
               if not os.path.exists(ca):
                   anc.make_ca(ca, ca_key)
@@ -75,6 +128,27 @@ spec:
                       is_server_cert=True,
                   )
                   anc.CertificateDatabase().add_certificate(cert)
+
+              if secret is None:
+                  api("POST", f"/api/v1/namespaces/{namespace}/secrets", {
+                      "apiVersion": "v1",
+                      "kind": "Secret",
+                      "metadata": {
+                          "name": secret_name,
+                          "labels": {
+                              "app.kubernetes.io/name": {{ include "taky.name" . | quote }},
+                              "app.kubernetes.io/instance": {{ .Release.Name | quote }},
+                              "app.kubernetes.io/managed-by": {{ .Release.Service | quote }},
+                          },
+                      },
+                      "type": "Opaque",
+                      "data": {
+                          k: base64.b64encode(
+                              open(os.path.join(ssl_dir, k), "rb").read()
+                          ).decode()
+                          for k in keys
+                      },
+                  })
               {{- end }}
           volumeMounts:
             - name: config

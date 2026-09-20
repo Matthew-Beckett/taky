@@ -1,0 +1,14 @@
+{{- if and .Values.ssl.enabled (not .Values.ssl.secretName) -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "taky.fullname" . }}-certs
+  labels:
+    {{- include "taky.labels" . | nindent 4 }}
+rules:
+  # The init-certs container reads the bootstrapped certificate Secret
+  # (to restore it onto a re-created volume) and creates it if absent.
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create"]
+{{- end }}

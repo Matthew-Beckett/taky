@@ -1,0 +1,15 @@
+{{- if and .Values.ssl.enabled (not .Values.ssl.secretName) -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "taky.fullname" . }}-certs
+  labels:
+    {{- include "taky.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "taky.fullname" . }}-certs
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "taky.serviceAccountName" . }}
+{{- end }}

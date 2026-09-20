@@ -51,6 +51,18 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+The ServiceAccount to use. Falls back to the release fullname (created by
+this chart) or "default" when serviceAccount.create is false.
+*/}}
+{{- define "taky.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- default (include "taky.fullname" .) .Values.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}
+
+{{/*
 Fully qualified image reference, honoring global.image.registry.
 */}}
 {{- define "taky.image" -}}

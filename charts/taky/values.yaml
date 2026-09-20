@@ -23,6 +23,15 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+serviceAccount:
+  # The init-certs container needs a ServiceAccount with get/create on
+  # Secrets to publish bootstrapped certificates. A Role/RoleBinding is
+  # only rendered when ssl.enabled is set without ssl.secretName.
+  create: true
+  annotations: {}
+  # Defaults to the release fullname; "default" when create=false.
+  name: ""
+
 podAnnotations: {}
 podLabels: {}
 podSecurityContext: {}
@@ -54,7 +63,10 @@ ssl:
   secretName: ""
   # When enabled without secretName, a self-signed CA and server
   # certificate are generated on first boot into the persistent volume
-  # at /var/taky/ssl. Requires persistence.enabled=true.
+  # at /var/taky/ssl and published to a Secret named
+  # "<fullname>-ssl" (same key layout as secretName expects). The
+  # Secret is restored onto the volume if the PVC is re-created empty.
+  # Requires persistence.enabled=true.
 
 # Persists /var/taky (datapackage uploads and metadata). When disabled
 # an emptyDir is used and uploads are lost on pod restart.
