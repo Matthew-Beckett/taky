@@ -53,7 +53,7 @@ jobs:
     # for them this workflow is a build-only check.
     - name: Login to GHCR
       if: github.event.pull_request.head.repo.full_name == github.repository
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
